@@ -12,7 +12,7 @@ Usage:
 Options:
     -h --help                     Show this screen.
     --version                     Show version.
-    -v                            Increases verbosity.
+    -v --verbose                  Increases verbosity.
     -l --log-level LEVEL          Defines the log verbosity [default: WARN].
     --log-file FILE               Stores all log output in a file.
     -p --parameter PARAM=VALUE    Defines a parameter.
