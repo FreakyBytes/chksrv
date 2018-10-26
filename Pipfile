@@ -4,6 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+docopt = "~=0.6"
+"e1839a8" = {path = ".", editable = true}
 
 [dev-packages]
 
