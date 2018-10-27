@@ -5,6 +5,7 @@ chksrv - check-service a tool to probe and check the health of services.
 Usage:
     chksrv (-h | --help)
     chksrv --version
+    chksrv tcp [options] [-p PARAM=VALUE]... [-e EXPR]... HOST PORT
     chksrv http [options] [-p PARAM=VALUE]... [-e EXPR]... URL
     chksrv ping [options] [-p PARAM=VALUE]... [-e EXPR]... HOST
     chksrv dns [options] [-p PARAM=VALUE]... [-e EXPR]... DOMAIN
@@ -30,6 +31,8 @@ import re
 from docopt import docopt
 
 from chksrv import exceptions
+from chksrv.config import parse_option_value
+from chksrv import checks
 
 
 log = logging.getLogger('CLI')
@@ -69,7 +72,7 @@ def setup_logging(level=logging.WARN, logfile=None) -> None:
 
 
 def parse_type(args: typing.Dict[str, typing.Any]) -> str:
-    types = ('http', 'ping', 'dns')
+    types = ('tcp', 'ssl', 'http', 'ping', 'dns')
     result = None
 
     for t in types:
@@ -82,10 +85,10 @@ def parse_type(args: typing.Dict[str, typing.Any]) -> str:
     if result is None:
         raise exceptions.ChksrvConfigException("No check type is configured.")
 
-    return result
+    return result.lower()
 
 
-def parse_parameter(param_list: typing.List[str]) -> typing.Dict[str, typing.Any]:
+def parse_options(param_list: typing.List[str]) -> typing.Dict[str, typing.Any]:
     regex = re.compile(r'^(?P<name>[a-z][a-z0-9\-\_\.]+)\=(?P<value>.+)$')
 
     log.debug("Parse parameter")
@@ -97,7 +100,7 @@ def parse_parameter(param_list: typing.List[str]) -> typing.Dict[str, typing.Any
             continue
 
         name = match.group('name').lower()
-        value = match.group('value')
+        value = parse_option_value(match.group('value'))
 
         if name in params:
             log.warn(f"Parameter '{name}' was already defined with value '{params[name]}'. Now overwriting with '{value}'")
@@ -146,5 +149,11 @@ def run():
     
     chk_type = parse_type(args)
     log.info(f"Check type {chk_type}")
-    params = parse_parameter(args.get('--parameter', []))
-    
+    options = parse_options(args.get('--parameter', []))
+
+    if chk_type == 'tcp':
+        chk = checks.TcpCheck(args['HOST'], int(args['PORT']), options=options)
+        chk.run()
+        print(chk.results)
+    else:
+        log.error(f"Not implemented check type {chk_type}")
