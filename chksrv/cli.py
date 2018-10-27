@@ -6,6 +6,7 @@ Usage:
     chksrv (-h | --help)
     chksrv --version
     chksrv tcp [options] [-p PARAM=VALUE]... [-e EXPR]... HOST PORT
+    chksrv ssl [options] [-p PARAM=VALUE]... [-e EXPR]... HOST PORT
     chksrv http [options] [-p PARAM=VALUE]... [-e EXPR]... URL
     chksrv ping [options] [-p PARAM=VALUE]... [-e EXPR]... HOST
     chksrv dns [options] [-p PARAM=VALUE]... [-e EXPR]... DOMAIN
@@ -138,7 +139,6 @@ def parse_loglevel(args):
 
 def run():
     args = docopt(__doc__)
-    print(args)
 
     if args['--version']:
         print(f"chksrv version {get_version()}")
@@ -154,6 +154,12 @@ def run():
     if chk_type == 'tcp':
         chk = checks.TcpCheck(args['HOST'], int(args['PORT']), options=options)
         chk.run()
-        print(chk.results)
+    elif chk_type == 'ssl':
+        chk = checks.SslCheck(args['HOST'], int(args['PORT']), options=options)
+        chk.run()
     else:
         log.error(f"Not implemented check type {chk_type}")
+
+    if chk and chk.results:
+        from pprint import pprint
+        pprint(chk.results)

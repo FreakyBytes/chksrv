@@ -68,7 +68,7 @@ class TcpCheck(BaseCheck):
 
             sock.connect((self.host, self.port))
 
-            self.results['tcp.con_time.perf'], self.results['tcp.con_time.process'] = stop_timer(*time)
+            self.results['tcp.con.time.perf'], self.results['tcp.con.time.process'] = stop_timer(*time)
             self.results['tcp.success'] = True
 
             return sock
