@@ -8,6 +8,9 @@ docopt = "~=0.6"
 "e1839a8" = {path = ".", editable = true}
 
 [dev-packages]
+pylint = "*"
+"flake8" = "*"
+jedi = "*"
 
 [requires]
 python_version = "3.7"
