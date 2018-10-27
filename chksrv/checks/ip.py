@@ -8,7 +8,7 @@ import logging
 import socket
 import time
 
-from . import BaseCheck
+from . import BaseCheck, start_timer, stop_timer
 
 
 class TcpCheck(BaseCheck):
@@ -64,16 +64,11 @@ class TcpCheck(BaseCheck):
         try:
             self.log.info(f"Try connecting to {self.host} {self.port}")
 
-            time_perf = time.perf_counter()
-            time_proc = time.process_time()
+            time = start_timer()
 
             sock.connect((self.host, self.port))
 
-            time_proc = time.process_time() - time_proc
-            time_perf = time.perf_counter() - time_perf
-
-            self.results['tcp.con_time.process'] = time_proc
-            self.results['tcp.con_time.perf']  = time_perf
+            self.results['tcp.con_time.perf'], self.results['tcp.con_time.process'] = stop_timer(*time)
             self.results['tcp.success'] = True
 
             return sock

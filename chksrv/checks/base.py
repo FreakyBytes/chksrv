@@ -5,7 +5,18 @@ chksrv - Base Check Module.
 import typing
 import logging
 
+import time
+
 from chksrv.config import OptionDict
+
+
+def start_timer():
+    return time.perf_counter(), time.process_time()
+
+
+def stop_timer(time_perf, time_proc):
+    end_perf, end_proc = time.perf_counter(), time.process_time()
+    return end_perf - time_perf, end_proc - time_proc
 
 
 class BaseCheck(object):

@@ -5,7 +5,7 @@ Package of available chekcs
 """
 
 
-from .base import BaseCheck
+from .base import BaseCheck, start_timer, stop_timer
 from .ip import TcpCheck, IcmpPingCheck
 from .dns import DnsCheck
 from .ssl import SslCheck
