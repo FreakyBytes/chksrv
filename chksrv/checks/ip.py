@@ -28,6 +28,8 @@ class TcpCheck(BaseCheck):
         sock = self.get_connection()
         self.close_connection(sock)
 
+         self.results['success'] = self.results['tcp.success'] is True
+
     def get_connection(self):
         return self._connect_socket(retry=False)
 

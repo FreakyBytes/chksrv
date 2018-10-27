@@ -43,6 +43,8 @@ class SslCheck(TcpCheck):
         sock = self.get_connection()
         self.close_connection(sock)
 
+        self.results['success'] = self.results['tcp.success'] is True and self.results['ssl.success'] is True
+
     def get_connection(self):
         self.log.info(f"SSL library: {ssl.OPENSSL_VERSION} ({'.'.join(map(str, ssl.OPENSSL_VERSION_INFO))})")
         context = self._get_context()
@@ -109,20 +111,29 @@ class SslCheck(TcpCheck):
 
             self.results['ssl.handshake.time.perf'], self.results['ssl.handshake.time.process'] = stop_timer(*timer)
             self.results['ssl.success'] = True
-            self.results['ssl.con.cert'] = ssock.getpeercert()
-            self.results['ssl.con.cipher'], self.results['ssl.con.protocol'], self.results['ssl.con.secret_bits'] = ssock.cipher() or (None, None, None)
-            self.results['ssl.con.compression'] = ssock.compression()
-            self.results['ssl.con.alpn_protocol'] = ssock.selected_alpn_protocol()
-            self.results['ssl.con.npn_protocol'] = ssock.selected_npn_protocol()
-            self.results['ssl.con.ssl_version'] = ssock.version()
-            self.results['ssl.con.server_hostname'] = ssock.server_hostname
+            self._update_results(context, ssock, True)
+
+            self.log.info("SSL handshake successfull")
 
             return ssock
 
         except ssl.SSLError as e:
             self.results['ssl.success'] = False
+            self._update_results(context, ssock, False)
             self.log.error(f"SSL handshake failed: {e.reason}", exc_info=False)
             return None
+
+    def _update_results(self, context: ssl.SSLContext, ssock: ssl.SSLSocket, success: bool):
+
+        cert = ssock.getpeercert() if success else None
+        self.results['ssl.con.cert'] = cert
+        self.results['ssl.con.cipher'], self.results['ssl.con.protocol'], self.results['ssl.con.secret_bits'] = ssock.cipher() or (None, None, None)
+        self.results['ssl.con.compression'] = ssock.compression() or None
+        self.results['ssl.con.alpn_protocol'] = ssock.selected_alpn_protocol() or None
+        self.results['ssl.con.npn_protocol'] = ssock.selected_npn_protocol() or None
+        self.results['ssl.con.ssl_version'] = ssock.version() or None
+        self.results['ssl.con.server_hostname'] = ssock.server_hostname or None
+        self.results['ssl.con.cert.matches_hostname'] = True if cert is not None and ssl.match_hostname(cert, self.host) else False
             
 
 
