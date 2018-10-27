@@ -6,7 +6,6 @@ import typing
 import logging
 
 import socket
-import time
 
 from . import BaseCheck, start_timer, stop_timer
 

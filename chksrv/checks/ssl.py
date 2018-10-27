@@ -135,9 +135,3 @@ class SslCheck(TcpCheck):
         self.results['ssl.con.server_hostname'] = ssock.server_hostname or None
         self.results['ssl.con.cert.matches_hostname'] = True if cert is not None and ssl.match_hostname(cert, self.host) else False
             
-
-
-
-
-
-
