@@ -7,5 +7,6 @@ Package of available chekcs
 
 from .base import BaseCheck
 from .ip import TcpCheck, UdpCheck, IcmpPingCheck
+from .dns import DnsCheck
 from .ssl import SslCheck
 from .http import HttpCheck
