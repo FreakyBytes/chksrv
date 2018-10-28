@@ -10,7 +10,7 @@ setup(
     version='0.1.0',
     description='A tool to probe and check the health of services',
     long_description=long_description,
-    long_description_content_type="text/rst",
+    long_description_content_type="text/x-rst",
     url='https://git.hel.freakybytes.net/martin/chksrv',
     author='Martin Peters',
     author_email='',
