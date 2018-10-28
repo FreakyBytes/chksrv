@@ -57,23 +57,31 @@ class HttpCheck(BaseCheck):
         con = self.get_connection()
         self.close_connection(con)
 
-        self.results['success'] = self.results['tcp.success'] is True and (self.results['ssl.success'] is True or not self.use_ssl) and self.results['http.success']
+        self.results['success'] = self.results.get('tcp.success', False) is True and \
+                                    (self.results.get('ssl.success') is True or not self.use_ssl) and \
+                                    self.results.get('http.success', False) is True
 
     def get_connection(self):
         self.log.info("Get connection using sub-check task")
 
         sock = self.subtask.get_connection()
         self.results.update(self.subtask.results)
+        
+        if sock:
+            self.log.info("Initiate HTTP connection using socket")
+            con = HttpSocketConnection(sock)
+            # con.set_debuglevel(logging.root.level)
+            self._send_request(con)
 
-        self.log.info("Initiate HTTP connection using socket")
-        con = HttpSocketConnection(sock)
-        # con.set_debuglevel(logging.root.level)
-        self._send_request(con)
-
-        return con
+            return con
+        else:
+           self.results['http.success'] = False
+           self.log.error("Failed to establish socket")
+           return None 
 
     def close_connection(self, con: HttpSocketConnection):
-        con.close()
+        if con:
+            con.close()
 
     def _parse_url(self, url):
         url = urlparse(url)

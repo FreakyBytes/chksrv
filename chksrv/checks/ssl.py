@@ -50,9 +50,13 @@ class SslCheck(TcpCheck):
         context = self._get_context()
 
         sock = self._connect_socket(retry=False)
-        ssock = self._wrap_socket(sock, context)
-        
-        return ssock
+        if sock:
+            ssock = self._wrap_socket(sock, context)
+            return ssock
+        else:
+            self.results['ssl.success'] = False
+            self.log.error("Failed to establish socket")
+            return None
 
     def close_connection(self, ssock: ssl.SSLSocket):
         if ssock:
@@ -110,7 +114,6 @@ class SslCheck(TcpCheck):
             ssock.do_handshake()
 
             self.results['ssl.handshake.time.perf'], self.results['ssl.handshake.time.process'] = stop_timer(*timer)
-            self.results['ssl.success'] = True
             self._update_results(context, ssock, True)
 
             self.log.info("SSL handshake successfull")
@@ -118,12 +121,13 @@ class SslCheck(TcpCheck):
             return ssock
 
         except ssl.SSLError as e:
-            self.results['ssl.success'] = False
             self._update_results(context, ssock, False)
             self.log.error(f"SSL handshake failed: {e.reason}", exc_info=False)
             return None
 
     def _update_results(self, context: ssl.SSLContext, ssock: ssl.SSLSocket, success: bool):
+
+        self.results['ssl.success'] = success
 
         cert = ssock.getpeercert() if success else None
         self.results['ssl.con.cert'] = cert

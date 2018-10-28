@@ -34,6 +34,10 @@ class TcpCheck(BaseCheck):
 
     def close_connection(self, sock: typing.Type[socket.socket]):
         if sock:
+            timer = start_timer()
+            sock.shutdown(socket.SHUT_RDWR)
+            self.results['tcp.shutdown.time.perf'], self.results['tcp.shutdown.time.process'] = stop_timer(*timer)
+
             sock.close()
 
     def _connect_socket(self, retry=False):
@@ -77,7 +81,7 @@ class TcpCheck(BaseCheck):
             return sock
 
         except OSError as e:
-            self.log.exception(f"Error while connection to {self.host} {self.port}: {e.strerror}", exc_info=False)
+            self.log.exception(f"Error while connecting to {self.host} {self.port}: {e.strerror}", exc_info=False)
             if not retry and do_retry:
                 self.log.info("Retry socket connection", exc_info=False)
                 return self._connect_socket(retry=True)
