@@ -12,6 +12,8 @@ pylint = "*"
 "flake8" = "*"
 jedi = "*"
 rope = "*"
+setuptools = "*"
+wheel = "*"
 
 [requires]
 python_version = "3.7"
