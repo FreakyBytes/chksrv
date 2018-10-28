@@ -157,9 +157,14 @@ def run():
     elif chk_type == 'ssl':
         chk = checks.SslCheck(args['HOST'], int(args['PORT']), options=options)
         chk.run()
+    elif chk_type == 'http':
+        chk = checks.HttpCheck(args['URL'], options=options)
+        chk.run()
     else:
         log.error(f"Not implemented check type {chk_type}")
 
     if chk and chk.results:
         from pprint import pprint
         pprint(chk.results)
+
+    sys.exit(0 if chk.results['success'] is True else 1)

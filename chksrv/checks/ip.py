@@ -72,6 +72,8 @@ class TcpCheck(BaseCheck):
             self.results['tcp.con.time.perf'], self.results['tcp.con.time.process'] = stop_timer(*time)
             self.results['tcp.success'] = True
 
+            self.log.info("Connection successfull")
+
             return sock
 
         except OSError as e:
