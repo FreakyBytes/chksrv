@@ -5,13 +5,15 @@ chksrv - runner and expect evaluator.
 import typing
 import logging
 
+from datetime import datetime, timedelta
+
 from chksrv.checks import BaseCheck
 from chksrv import exceptions
 
 
 EVAL_GLOBALS = {
-    '__builtins__': {},
-    # Todo
+    'now': datetime.now,
+    'timedelta': timedelta,
 }
 
 
