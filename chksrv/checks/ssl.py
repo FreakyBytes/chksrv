@@ -1,3 +1,18 @@
+# chksrv
+# Copyright (C) 2018  Martin Peters
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 chksrv - SSL/TLS Check Module.
 """
@@ -38,7 +53,7 @@ class SslCheck(TcpCheck):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-    
+
     def run(self):
         sock = self.get_connection()
         self.close_connection(sock)
@@ -73,11 +88,11 @@ class SslCheck(TcpCheck):
             context = ssl.create_default_context()
         else:
             self.log.info("Creating SSL context")
-            
+
             protocol = PROTOCOL_MAP.get(self.options['ssl.protocol'].lower(), ssl.PROTOCOL_TLS)
             context = ssl.SSLContext(protocol)
             context.set_ciphers(self.options['ssl.ciphers'])
-        
+
         context.check_hostname = bool(self.options['ssl.check_hostname'])
         context.verify_mode = ssl.VerifyMode[self.options['ssl.verify_mode']] or ssl.VerifyMode.CERT_OPTIONAL
         context.verify_flags = ssl.VerifyFlags[self.options['ssl.verify_flags']] or ssl.VerifyFlags.VERIFY_DEFAULT
@@ -94,7 +109,7 @@ class SslCheck(TcpCheck):
         elif os.path.isfile(ca_path) and os.path.exists(ca_path):
             self.log.info(f"Load CA file: {ca_path}")
             context.load_verify_locations(cafile=ca_path)
-        
+
         elif os.path.isdir(ca_path) and os.path.exists(ca_path):
             self.log.info(f"Load load all CAs from directory: {ca_path}")
             context.load_verify_locations(capath=ca_path)
@@ -138,4 +153,3 @@ class SslCheck(TcpCheck):
         self.results['ssl.con.ssl_version'] = ssock.version() or None
         self.results['ssl.con.server_hostname'] = ssock.server_hostname or None
         self.results['ssl.con.cert.matches_hostname'] = True if cert is not None and ssl.match_hostname(cert, self.host) else False
-            
