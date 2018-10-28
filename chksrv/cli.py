@@ -1,6 +1,6 @@
 #!/usr/bin/env pyhton3
 """
-chksrv - check-service a tool to probe and check the health of services.
+chksrv - check-service a tool to probe and check the health of network services.
 
 Usage:
     chksrv (-h | --help)
@@ -144,10 +144,10 @@ def run():
     if args['--version']:
         print(f"chksrv version {get_version()}")
         return
-        
+
     setup_logging(parse_loglevel(args), args.get('--log-file', None))
     log.info("Start chksrv")
-    
+
     chk_type = parse_type(args)
     log.info(f"Check type {chk_type}")
     options = parse_options(args.get('--parameter', []))
