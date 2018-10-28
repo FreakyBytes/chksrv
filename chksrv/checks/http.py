@@ -66,7 +66,7 @@ class HttpCheck(BaseCheck):
 
         sock = self.subtask.get_connection()
         self.results.update(self.subtask.results)
-        
+
         if sock:
             self.log.info("Initiate HTTP connection using socket")
             con = HttpSocketConnection(sock)
@@ -145,7 +145,14 @@ class HttpCheck(BaseCheck):
         self.results['http.resp.body_length'] = len(body)
 
         for key, value in resp.getheaders():
-            key = key.replace(' ', '_').replace('-', '_').lower()
-            self.results['http.resp.header.' + key] = value
+            key = 'http.resp.header.' + key.replace(' ', '_').replace('-', '_').lower()
+            if key in self.results:
+                # make it a list
+                if isinstance(self.results[key], list):
+                    self.results[key].append(value)
+                else:
+                    self.results[key] = [self.results[key], value]
+            else:
+                self.results[key] = value
             self.log.debug(f"Found response header: {key}: {value}")
         
