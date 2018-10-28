@@ -35,7 +35,7 @@ class HttpSocketConnection(HTTPConnection):
 
 
 class HttpCheck(BaseCheck):
-    
+
     log = logging.getLogger('HTTP')
     default_options = {
         **SslCheck.default_options,
@@ -77,7 +77,7 @@ class HttpCheck(BaseCheck):
         else:
            self.results['http.success'] = False
            self.log.error("Failed to establish socket")
-           return None 
+           return None
 
     def close_connection(self, con: HttpSocketConnection):
         if con:
@@ -89,7 +89,7 @@ class HttpCheck(BaseCheck):
         if url.scheme.lower() not in ('http', 'https'):
             self.log.error(f"Unknown URL scheme: {url.scheme}")
             raise ValueError("The HTTP check module only accepts URLs with HTTP or HTTPS scheme")
-        
+
         use_ssl = True if url.scheme.lower() == 'https' else False
         host = url.hostname
         port = url.port or (DEFAULT_PORT_HTTPS if use_ssl else DEFAULT_PORT_HTTP)
@@ -101,7 +101,7 @@ class HttpCheck(BaseCheck):
 
         self.log.info("Prepare HTTP request")
 
-        # iterate over options beginning with http.header. 
+        # iterate over options beginning with http.header.
         additional_headers = {}
         for key, value in filter(lambda item: item[0].startswith('http.header.'), self.options.items()):
             header_name = key[len('http.header.')]
@@ -141,7 +141,7 @@ class HttpCheck(BaseCheck):
         self.results['http.resp.version'] = resp.version
 
         body = resp.read()
-        self.results['http.resp.content'] = body
+        self.results['http.resp.body'] = body
         self.results['http.resp.body_length'] = len(body)
 
         for key, value in resp.getheaders():
@@ -155,4 +155,3 @@ class HttpCheck(BaseCheck):
             else:
                 self.results[key] = value
             self.log.debug(f"Found response header: {key}: {value}")
-        
