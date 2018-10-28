@@ -162,6 +162,7 @@ def run():
         chk.run()
     else:
         log.error(f"Not implemented check type {chk_type}")
+        sys.exit(2)
 
     if chk and chk.results:
         from pprint import pprint
