@@ -34,6 +34,7 @@ from docopt import docopt
 from chksrv import exceptions
 from chksrv.config import parse_option_value
 from chksrv import checks
+from chksrv.runner import Runner
 
 
 log = logging.getLogger('CLI')
@@ -153,19 +154,24 @@ def run():
 
     if chk_type == 'tcp':
         chk = checks.TcpCheck(args['HOST'], int(args['PORT']), options=options)
-        chk.run()
     elif chk_type == 'ssl':
         chk = checks.SslCheck(args['HOST'], int(args['PORT']), options=options)
-        chk.run()
     elif chk_type == 'http':
         chk = checks.HttpCheck(args['URL'], options=options)
-        chk.run()
     else:
         log.error(f"Not implemented check type {chk_type}")
         sys.exit(2)
 
-    if chk and chk.results:
-        from pprint import pprint
-        pprint(chk.results)
+    runner = Runner(chk, args['--expects'], options)
+    runner.run()
 
-    sys.exit(0 if chk.results['success'] is True else 1)
+    if runner and runner.results:
+        from pprint import pprint
+        pprint(runner.results)
+
+    if runner.success:
+        log.info("Check succeded")
+    else:
+        log.info("Check failed")
+
+    sys.exit(0 if runner.success is True else 1)

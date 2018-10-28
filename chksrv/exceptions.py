@@ -8,3 +8,7 @@ class ChksrvBaseException(BaseException):
 
 class ChksrvConfigException(ChksrvBaseException):
     pass
+
+
+class ChksrvNotReadyError(ChksrvBaseException):
+    pass
