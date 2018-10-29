@@ -32,7 +32,7 @@ EVAL_GLOBALS = {
 }
 
 
-class Runner(object):
+class CheckRunner(object):
 
     log = logging.getLogger('RUNNER')
 

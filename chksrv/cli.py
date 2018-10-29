@@ -49,7 +49,7 @@ from docopt import docopt
 from chksrv import exceptions
 from chksrv.config import parse_option_value
 from chksrv import checks
-from chksrv.runner import Runner
+from chksrv.runner import CheckRunner
 
 
 log = logging.getLogger('CLI')
@@ -177,7 +177,7 @@ def run():
         log.error(f"Not implemented check type {chk_type}")
         sys.exit(2)
 
-    runner = Runner(chk, args['--expects'], options)
+    runner = CheckRunner(chk, args['--expects'], options)
     runner.run()
 
     if runner and runner.results:
