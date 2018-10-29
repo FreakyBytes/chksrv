@@ -27,3 +27,6 @@ class ChksrvConfigException(ChksrvBaseException):
 
 class ChksrvNotReadyError(ChksrvBaseException):
     pass
+
+class ChksrvTimeoutError(ChksrvBaseException):
+    pass

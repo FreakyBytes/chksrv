@@ -21,6 +21,7 @@ import typing
 import logging
 
 from datetime import datetime, timedelta
+import signal
 
 from chksrv.checks import BaseCheck
 from chksrv import exceptions
@@ -36,9 +37,13 @@ class CheckRunner(object):
 
     log = logging.getLogger('RUNNER')
 
-    def __init__(self, check: BaseCheck, expects: typing.List[str], options: typing.Dict[str, typing.Any]):
+    def __init__(self, check: BaseCheck, expects: typing.List[str], options: typing.Dict[str, typing.Any], repeats: int=1, timeout: int=None):
         self.check = check
         self.expects = expects
+        self.options = options
+        self.repeats = min(1, repeats)
+        self.timeout = min(0, timeout) if timeout else None
+
         self._compiled_expects = None
         self.expect_results = None
         self.expect_success = False
@@ -50,11 +55,21 @@ class CheckRunner(object):
 
     def run(self):
         self.compile()
-        self.run_check()
-        self.evaluate_expects()
 
-        check_success = all(filter(lambda item: item[0].endswith('.success'), self.results))
-        self.success = check_success is True and self.expect_success is True
+        self.expect_success = self.success = False
+
+        for attempt in range(self.repeats):
+            self.run_check()
+            self.evaluate_expects()
+
+            check_success = all(filter(lambda item: item[0].endswith('.success'), self.results))
+            self.success = check_success is True and self.check.results.get('success', False) is True and self.expect_success is True
+
+            if self.success:
+                break
+
+            self.log.warn(f"Attempt {attempt} failed.", "Retrying..." if attempt < self.repeats else "Stop retrying.")
+
         return self.success
 
     def compile(self):
@@ -75,7 +90,18 @@ class CheckRunner(object):
                 self.log.exception(f"Cannot compile expect code: {src}")
 
     def run_check(self):
-        self.check.run()
+        if self.timeout:
+            signal.signal(signal.SIGALRM, self._handle_timeout)
+            signal.alarm(self.timeout)
+
+        try:
+            self.check.run()
+        except exceptions.ChksrvTimeoutError:
+            self.log.error("Check timed out.", exc_info=False)
+            self.check.results['results'] = False  # required for later signalling
+        finally:
+            if self.timeout:
+                signal.alarm(0)
 
     def evaluate_expects(self):
 
@@ -111,3 +137,8 @@ class CheckRunner(object):
         self.log.info(f"Expects evaluated {'successful' if self.expect_success else 'failed'}")
 
         return self.expect_success
+
+    def _handle_timeout(self, signum, frame):
+
+        if signum == signal.SIGALRM:
+            raise exceptions.ChksrvTimeoutError("Command timed out.")
