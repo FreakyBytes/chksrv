@@ -37,12 +37,13 @@ class CheckRunner(object):
 
     log = logging.getLogger('RUNNER')
 
-    def __init__(self, check: BaseCheck, expects: typing.List[str], options: typing.Dict[str, typing.Any], repeats: int=1, timeout: int=None):
+    def __init__(self, check: BaseCheck, expects: typing.List[str], options: typing.Dict[str, typing.Any], retries: int=1, timeout: int=None):
+        self._expects = None  # property
         self.check = check
         self.expects = expects
         self.options = options
-        self.repeats = min(1, repeats)
-        self.timeout = min(0, timeout) if timeout else None
+        self.retries = max(1, int(retries))
+        self.timeout = max(0, int(timeout)) if timeout else None
 
         self._compiled_expects = None
         self.expect_results = None
@@ -53,12 +54,21 @@ class CheckRunner(object):
     def results(self) -> typing.Dict[str, typing.Any]:
         return self.check.results
 
+    @property
+    def expects(self) -> typing.List[str]:
+        return self._expects if hasattr(self, '_expects') else None
+
+    @expects.setter
+    def expects(self, expects):
+        self._expects = expects
+
     def run(self):
         self.compile()
 
         self.expect_success = self.success = False
 
-        for attempt in range(self.repeats):
+        for attempt in range(1, self.retries + 1):
+            self.log.info(f"Attempt {attempt}/{self.retries}")
             self.run_check()
             self.evaluate_expects()
 
@@ -68,14 +78,19 @@ class CheckRunner(object):
             if self.success:
                 break
 
-            self.log.warn(f"Attempt {attempt} failed.", "Retrying..." if attempt < self.repeats else "Stop retrying.")
+            self.log.warn(' '.join([f"Attempt {attempt} failed.", "Retrying..." if attempt < self.retries else "Stop."]))
 
         return self.success
 
     def compile(self):
         """compiles the expect handlers."""
 
-        if self._compiled_expects or not self.expects:
+        if not self.expects:
+            # no expects available
+            self._compiled_expects = []
+            return
+
+        if self._compiled_expects:
             # expects already compiled or no expects available
             return
 
@@ -97,8 +112,8 @@ class CheckRunner(object):
         try:
             self.check.run()
         except exceptions.ChksrvTimeoutError:
-            self.log.error("Check timed out.", exc_info=False)
-            self.check.results['results'] = False  # required for later signalling
+            self.log.error(f"Check timed out after {self.timeout} seconds.", exc_info=False)
+            self.check.results['results'] = False  # set check fail state
         finally:
             if self.timeout:
                 signal.alarm(0)
@@ -106,7 +121,7 @@ class CheckRunner(object):
     def evaluate_expects(self):
 
         if not self.results:
-            self.log.error("There are not results from the check. Did it run?")
+            self.log.error("There are no results from the check. Did it run?")
             raise exceptions.ChksrvNotReadyError("There are not results from the check.")
 
         if not self._compiled_expects:

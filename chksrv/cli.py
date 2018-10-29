@@ -177,7 +177,7 @@ def run():
         log.error(f"Not implemented check type {chk_type}")
         sys.exit(2)
 
-    runner = CheckRunner(chk, args['--expects'], options)
+    runner = CheckRunner(chk, args['--expects'], options, args['--retry'], args['--timeout'])
     runner.run()
 
     if runner and runner.results:
